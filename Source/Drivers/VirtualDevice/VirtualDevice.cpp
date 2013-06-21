@@ -3,11 +3,14 @@
 
 // STL Header
 #include <array>
-//#include <chrono>
 #include <map>
 #include <string>
 #include <vector>
 
+// C Time header
+#include <ctime>
+
+// for debug only
 #include <iostream>
 
 // OpenNI Header
@@ -310,7 +313,9 @@ protected:
 			pFrame->sensorType		= ONI_SENSOR_COLOR;
 			pFrame->stride			= int( m_uStride );
 
-			pFrame->timestamp		= m_iFrameId;//std::chrono::system_clock::now().time_since_epoch().count();
+			time_t	tNow;
+			time( &tNow );
+			pFrame->timestamp		= tNow;
 		}
 		return pFrame;
 	}
