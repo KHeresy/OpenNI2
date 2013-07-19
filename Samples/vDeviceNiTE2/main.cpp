@@ -16,7 +16,7 @@
 // NiTE Header
 #include <NiTE.h>
 
-#include "../vDeviceNiTE1/VirtualDevice.h"
+#include "VirtualDevice.h"
 
 // namespace
 using namespace std;
@@ -39,12 +39,12 @@ int main( int argc, char **argv )
 	openni::VideoStream* virDepth = CreateVirtualStream( virDevice, vsDepth, []( const OniFrame& rF1,OniFrame& rF2 ){
 		openni::DepthPixel* pImg1 = (openni::DepthPixel*)rF1.data;
 		openni::DepthPixel* pImg2 = (openni::DepthPixel*)rF2.data;
-		for( int y = 0; y < rF2.height; ++ y )
+		for( int y = 0; y < rF2.height / 2; ++ y )
 		{
-			for( int x = 0; x < rF2.width; ++ x )
+			for( int x = 0; x < rF2.width / 2; ++ x )
 			{
 				//if( x % 200 )
-				pImg2[ x + y * rF2.width ] = pImg1[ x + y * rF2.width ];
+				pImg2[ x + y * rF2.width ] = pImg1[ ( x * 2 ) + y * 2 * rF1.width ];
 			}
 		}
 	} );

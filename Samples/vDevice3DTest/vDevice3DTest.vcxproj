@@ -176,7 +176,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\VirtualDeviceTest\VirtualDevice.h" />
+    <ClInclude Include="..\vDeviceNiTE1\VirtualDevice.h" />
     <ClInclude Include="OpenGLCamera.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
