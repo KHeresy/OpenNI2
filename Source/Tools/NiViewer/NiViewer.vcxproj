@@ -88,11 +88,15 @@
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MinimalRebuild>
+      </MinimalRebuild>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Comdlg32.lib;OpenNI2.lib;XnLib.lib;glut32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);..\..\..\ThirdParty\GL</AdditionalLibraryDirectories>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\..\Include</AdditionalIncludeDirectories>
@@ -105,11 +109,15 @@
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <TreatWarningAsError>true</TreatWarningAsError>
+      <MinimalRebuild>
+      </MinimalRebuild>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Comdlg32.lib;OpenNI2.lib;XnLib.lib;glut64.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);..\..\..\ThirdParty\GL</AdditionalLibraryDirectories>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\..\Include</AdditionalIncludeDirectories>
@@ -129,6 +137,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -136,6 +145,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Comdlg32.lib;OpenNI2.lib;XnLib.lib;glut32.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);..\..\..\ThirdParty\GL</AdditionalLibraryDirectories>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\..\Include</AdditionalIncludeDirectories>
@@ -155,6 +165,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <FloatingPointModel>Fast</FloatingPointModel>
+      <TreatWarningAsError>true</TreatWarningAsError>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -162,6 +173,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <AdditionalDependencies>Comdlg32.lib;OpenNI2.lib;XnLib.lib;glut64.lib</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(OutDir);..\..\..\ThirdParty\GL</AdditionalLibraryDirectories>
+      <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
     <ResourceCompile>
       <AdditionalIncludeDirectories>..\..\..\Include</AdditionalIncludeDirectories>
