@@ -122,9 +122,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PSLink", "Source\Drivers\PS
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualDevice", "Source\Drivers\VirtualDevice\VirtualDevice.vcxproj", "{DAFA5887-D67D-495F-8FC5-01CD24A70CE5}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualDeviceTest2", "Samples\VirtualDeviceTest2\VirtualDeviceTest2.vcxproj", "{F9A3BCB8-4BFE-4DA7-A43C-8DAC09DFE03E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vDevice3DTest", "Samples\vDevice3DTest\VirtualDeviceTest2.vcxproj", "{F9A3BCB8-4BFE-4DA7-A43C-8DAC09DFE03E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VirtualDeviceTest", "Samples\VirtualDeviceTest\VirtualDeviceTest.vcxproj", "{F6125DDF-7B0D-48C0-A0EC-D09780C438FA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vDeviceNiTE1", "Samples\vDeviceNiTE1\VirtualDeviceTest.vcxproj", "{F6125DDF-7B0D-48C0-A0EC-D09780C438FA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

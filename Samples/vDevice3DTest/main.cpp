@@ -15,7 +15,7 @@
 #include <OpenNI.h>
 
 #include "OpenGLCamera.h"
-#include "../VirtualDeviceTest/VirtualDevice.h"
+#include "../vDeviceNiTE1/VirtualDevice.h"
 
 // namespace
 using namespace std;
