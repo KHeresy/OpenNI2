@@ -61,4 +61,17 @@ private:
 
 };
 } // namespace kinect_device
+
+// Macro to ensure the property size.
+// To be used in getProperty/setProperty implementation.
+// Borrowed from Drivers/PSLink/PrimeClientDefs.h and modified a bit.
+#define EXACT_PROP_SIZE_OR_DO(size, type) if ((size_t)(size) != sizeof(type))
+
+#define EXACT_PROP_SIZE_OR_RETURN(size, type) \
+	EXACT_PROP_SIZE_OR_DO(size, type) \
+	{ \
+		printf("Unexpected size: %d != %d\n", (size), sizeof(type)); /* TODO: Better to use log */ \
+		return ONI_STATUS_ERROR; \
+	}
+
 #endif //_BASE_KINECT_STREAM_H_

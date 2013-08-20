@@ -19,7 +19,6 @@ IRKinectStream::IRKinectStream(KinectStreamImpl* pStreamImpl):
 	m_videoMode.fps = DEFAULT_FPS;
 	m_videoMode.resolutionX = KINECT_RESOLUTION_X_640;
 	m_videoMode.resolutionY = KINECT_RESOLUTION_Y_480;
-	m_mirroring = false;
 }
 
 OniStatus IRKinectStream::start()
@@ -39,189 +38,75 @@ OniStatus IRKinectStream::start()
 void IRKinectStream::frameReceived(NUI_IMAGE_FRAME& imageFrame, NUI_LOCKED_RECT &LockedRect)
 {
 	OniFrame* pFrame = getServices().acquireFrame();
-	if( m_mirroring )
+
+	if (m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_GRAY16)
 	{
-		unsigned short* data_in = reinterpret_cast<unsigned short*>(LockedRect.pBits);
-		int iStartX, iEndX, iStartY, iEndY;
-		if( m_cropping.enabled )
+		struct IRToGray16PixelCopier
 		{
-			pFrame->dataSize = m_cropping.height * m_cropping.width * 3;
-			pFrame->stride = m_cropping.width * 3;
-
-			iStartX	= m_cropping.originX;
-			iStartY	= m_cropping.originY;
-			iEndX	= m_cropping.originX + m_cropping.width;
-			iEndY	= m_cropping.originY + m_cropping.height;
-		}
-		else
-		{
-			pFrame->dataSize = m_videoMode.resolutionY * m_videoMode.resolutionX * 3;
-			pFrame->stride = m_videoMode.resolutionX * 3;
-
-			iStartX	= 0;
-			iStartY	= 0;
-			iEndX	= m_videoMode.resolutionX;
-			iEndY	= m_videoMode.resolutionY;
-		}
-
-		if( m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_GRAY16 )
-		{
-			pFrame->stride = ( iEndX - iStartX ) * 2;
-
-			unsigned short* data_out = reinterpret_cast<unsigned short*>(pFrame->data);
-			for( int y = iStartY; y < iEndY; ++ y )
+			void operator()(const USHORT* const in, OniGrayscale16Pixel* const out)
 			{
-				int iShift = y * m_videoMode.resolutionX;
-				for( int x = iStartX; x < iEndX; ++ x )
-				{
-					*data_out = ( data_in[ ( m_videoMode.resolutionX - 1 - x ) + iShift ] >> 6 );
-					++ data_out;
-				}
+				*out = (*in) >> 6;
 			}
-		}
-		else if( m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_GRAY8 )
-		{
-			pFrame->stride = ( iEndX - iStartX );
+		};
 
-			char* data_out = reinterpret_cast<char*>(pFrame->data);
-			for( int y = iStartY; y < iEndY; ++ y )
-			{
-				int iShift = y * m_videoMode.resolutionX;
-				for( int x = iStartX; x < iEndX; ++ x )
-				{
-					*data_out = ( data_in[ ( m_videoMode.resolutionX - 1 - x ) + iShift ] >> 8 );
-					++ data_out;
-				}
-			}
-		}
-		else
-		{
-			pFrame->stride = ( iEndX - iStartX ) * 3;
+		typedef LineCopier<USHORT, OniGrayscale16Pixel, IRToGray16PixelCopier, ForwardMover<USHORT> > ForwardLineCopier;
+		typedef RectCopier<USHORT, OniGrayscale16Pixel, IRToGray16PixelCopier, ForwardMover<USHORT>, ForwardMover<USHORT> > ForwardRectCopier;
+		typedef RectCopier<USHORT, OniGrayscale16Pixel, IRToGray16PixelCopier, BackwardMover<USHORT>, ForwardMover<USHORT> > MirrorRectCopier;
 
-			struct Rgb { unsigned char r, g, b; };
-			Rgb* data_out = reinterpret_cast<Rgb*>(pFrame->data);
-			for( int y = iStartY; y < iEndY; ++ y )
+		USHORT* in = reinterpret_cast<USHORT*>(LockedRect.pBits);
+		OniGrayscale16Pixel* out = reinterpret_cast<OniGrayscale16Pixel*>(pFrame->data);
+
+		FrameCopier<USHORT, OniGrayscale16Pixel, ForwardLineCopier, ForwardRectCopier, MirrorRectCopier> copyFrame;
+		copyFrame(in, out, pFrame, m_videoMode, m_cropping, m_mirroring);
+	}
+	else if (m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_GRAY8)
+	{
+		struct IRToGray8PixelCopier
+		{
+			void operator()(const USHORT* const in, OniGrayscale8Pixel* const out)
 			{
-				int iShift = y * m_videoMode.resolutionX;
-				for( int x = iStartX; x < iEndX; ++ x )
-				{
-					char intensity = ( data_in[ ( m_videoMode.resolutionX - 1 - x ) + iShift ] >> 8 );
-					data_out->b = intensity;
-					data_out->r = intensity;
-					data_out->g = intensity;
-					++ data_out;
-				}
+				*out = (*in) >> 8;
 			}
-		}
-		pFrame->dataSize = pFrame->stride * ( iEndY - iEndX );
+		};
+
+		typedef LineCopier<USHORT, OniGrayscale8Pixel, IRToGray8PixelCopier, ForwardMover<USHORT> > ForwardLineCopier;
+		typedef RectCopier<USHORT, OniGrayscale8Pixel, IRToGray8PixelCopier, ForwardMover<USHORT>, ForwardMover<USHORT> > ForwardRectCopier;
+		typedef RectCopier<USHORT, OniGrayscale8Pixel, IRToGray8PixelCopier, BackwardMover<USHORT>, ForwardMover<USHORT> > MirrorRectCopier;
+
+		USHORT* in = reinterpret_cast<USHORT*>(LockedRect.pBits);
+		OniGrayscale8Pixel* out = reinterpret_cast<OniGrayscale8Pixel*>(pFrame->data);
+
+		FrameCopier<USHORT, OniGrayscale8Pixel, ForwardLineCopier, ForwardRectCopier, MirrorRectCopier> copyFrame;
+		copyFrame(in, out, pFrame, m_videoMode, m_cropping, m_mirroring);
+	}
+	else if (m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_RGB888)
+	{
+		struct IRToRgbPixelCopier
+		{
+			void operator()(const USHORT* const in, OniRGB888Pixel* const out)
+			{
+				BYTE intensity = (*in) >> 8;
+				out->r = intensity;
+				out->g = intensity;
+				out->b = intensity;
+			}
+		};
+
+		typedef LineCopier<USHORT, OniRGB888Pixel, IRToRgbPixelCopier, ForwardMover<USHORT> > ForwardLineCopier;
+		typedef RectCopier<USHORT, OniRGB888Pixel, IRToRgbPixelCopier, ForwardMover<USHORT>, ForwardMover<USHORT> > ForwardRectCopier;
+		typedef RectCopier<USHORT, OniRGB888Pixel, IRToRgbPixelCopier, BackwardMover<USHORT>, ForwardMover<USHORT> > MirrorRectCopier;
+
+		USHORT* in = reinterpret_cast<USHORT*>(LockedRect.pBits);
+		OniRGB888Pixel* out = reinterpret_cast<OniRGB888Pixel*>(pFrame->data);
+
+		FrameCopier<USHORT, OniRGB888Pixel, ForwardLineCopier, ForwardRectCopier, MirrorRectCopier> copyFrame;
+		copyFrame(in, out, pFrame, m_videoMode, m_cropping, m_mirroring);
 	}
 	else
 	{
-		if (m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_GRAY16)
-		{
-			unsigned short* data_in = reinterpret_cast<unsigned short*>(LockedRect.pBits);
-			unsigned short* data_out = reinterpret_cast<unsigned short*>(pFrame->data);
-			if (!m_cropping.enabled)
-			{
-				unsigned short* data_in_end = data_in + (m_videoMode.resolutionY * m_videoMode.resolutionX);
-				while (data_in < data_in_end)
-				{
-					unsigned short intensity = (*data_in)>> 6;
-					*data_out = intensity;
-					++data_in;
-					++data_out;
-				}
-				pFrame->stride = m_videoMode.resolutionX * 2;
-			}
-			else
-			{
-				int cropY = m_cropping.originY;
-				while (cropY < m_cropping.originY + m_cropping.height)
-				{
-					int cropX = m_cropping.originX;
-					while (cropX < m_cropping.originX + m_cropping.width)
-					{
-						unsigned short *iter = data_in + (cropY * m_videoMode.resolutionX + cropX++);
-						*(data_out++) = (*iter) >> 6;
-					}
-					cropY++;
-				}
-				pFrame->stride = m_cropping.width * 2;
-			}
-		}
-		else if (m_videoMode.pixelFormat == ONI_PIXEL_FORMAT_GRAY8)
-		{
-			unsigned short* data_in = reinterpret_cast<unsigned short*>(LockedRect.pBits);
-			char* data_out = reinterpret_cast<char*>(pFrame->data);
-			if (!m_cropping.enabled)
-			{
-				unsigned short* data_in_end = data_in + (m_videoMode.resolutionY * m_videoMode.resolutionX);
-				while (data_in < data_in_end)
-				{
-					char intensity = (*data_in)>> 8;
-					(*data_out) = intensity;
-					++data_in;
-					++data_out;
-				}
-				pFrame->stride = m_videoMode.resolutionX;
-			}
-			else
-			{
-				int cropY = m_cropping.originY;
-				while (cropY < m_cropping.originY + m_cropping.height)
-				{
-					int cropX = m_cropping.originX;
-					while (cropX < m_cropping.originX + m_cropping.width)
-					{
-						unsigned short *iter = data_in + (cropY * m_videoMode.resolutionX + cropX++);
-						char intensity = (*iter) >> 8;
-						*(data_out++) = intensity;
-					}
-					cropY++;
-				}
-				pFrame->stride = m_cropping.width * 2;
-
-			}
-		}
-		else
-		{
-			struct Rgb { unsigned char r, g, b;    };
-			unsigned short* data_in = reinterpret_cast<unsigned short*>(LockedRect.pBits);
-			Rgb* data_out = reinterpret_cast<Rgb*>(pFrame->data);
-			if (!m_cropping.enabled)
-			{
-				unsigned short* data_in_end = data_in + (m_videoMode.resolutionY * m_videoMode.resolutionX);
-				while (data_in < data_in_end)
-				{
-					char intensity = (*data_in)>> 8;
-					data_out->b = intensity;
-					data_out->r = intensity;
-					data_out->g = intensity;
-					++data_in;
-					++data_out;
-				}
-				pFrame->stride = m_videoMode.resolutionX * 3;
-			}
-			else
-			{
-				int cropY = m_cropping.originY;
-				while (cropY < m_cropping.originY + m_cropping.height)
-				{
-					int cropX = m_cropping.originX;
-					while (cropX < m_cropping.originX + m_cropping.width)
-					{
-						unsigned short *iter = data_in + (cropY * m_videoMode.resolutionX + cropX++);
-						char intensity = (*iter) >> 8;
-						data_out->b = intensity;
-						data_out->r = intensity;
-						data_out++->g = intensity;
-					}
-					cropY++;
-				}
-				pFrame->stride = m_cropping.width * 3;
-			}
-		}
+		XN_ASSERT(FALSE); // unsupported format. should not come here.
 	}
+		
 	if (!m_cropping.enabled)
 	{
 		pFrame->width = pFrame->videoMode.resolutionX = m_videoMode.resolutionX;

@@ -16,6 +16,7 @@ BaseKinectStream::BaseKinectStream(KinectStreamImpl* pStreamImpl):
 {
 	m_running = false;
 	m_cropping.enabled = FALSE;
+	m_mirroring = FALSE;
 	pStreamImpl->addStream(this);
 }
 
@@ -44,6 +45,7 @@ void BaseKinectStream::destroy()
 	m_pStreamImpl->removeStream(this);
 }
 
+// TODO: EXACT_PROP_SIZE_OR_XXX should be used for property size checking rather than copy-and-pasting
 OniStatus BaseKinectStream::getProperty(int propertyId, void* data, int* pDataSize)
 {
 	OniStatus status = ONI_STATUS_NOT_SUPPORTED;
@@ -60,20 +62,13 @@ OniStatus BaseKinectStream::getProperty(int propertyId, void* data, int* pDataSi
 			status = GetCropping((OniCropping*)data);
 		}
 		break;
-
 	case ONI_STREAM_PROPERTY_MIRRORING:
-		if (*pDataSize != sizeof(OniBool))
 		{
-			printf("Unexpected size: %d != %d\n", *pDataSize, sizeof(OniBool));
-			status = ONI_STATUS_ERROR;
-		}
-		else
-		{
+			EXACT_PROP_SIZE_OR_RETURN(*pDataSize, OniBool);
 			*(OniBool*)data = m_mirroring;
 			status = ONI_STATUS_OK;
 		}
 		break;
-
 	case ONI_STREAM_PROPERTY_HORIZONTAL_FOV:
 		{
 			float* val = (float*)data;
@@ -134,11 +129,7 @@ OniStatus BaseKinectStream::setProperty(int propertyId, const void* data, int da
 	}
 	else if (propertyId == ONI_STREAM_PROPERTY_MIRRORING)
 	{
-		if (dataSize != sizeof(OniBool))
-		{
-			printf("Unexpected size: %d != %d\n", dataSize, sizeof(OniBool));
-			status = ONI_STATUS_ERROR;
-		}
+		EXACT_PROP_SIZE_OR_RETURN(dataSize, OniBool);
 		m_mirroring = *(OniBool*)data;
 		status = ONI_STATUS_OK;
 	}
