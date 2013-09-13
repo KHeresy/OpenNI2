@@ -1,10 +1,3 @@
-// Example to display OpenNI mesh with OpenGL
-//
-// 		by Heresy
-// 		http://kheresy.wordpress.com
-//
-// version 1.01 @2013/03/12
-
 // STL Header
 #include <iostream>
 
@@ -15,16 +8,16 @@
 #include <OpenNI.h>
 
 #include "OpenGLCamera.h"
-#include "../vDeviceNiTE1/VirtualDevice.h"
 
 // namespace
 using namespace std;
 using namespace openni;
 
+#pragma region global objects
 // global OpenNI object
 Device			g_devDevice;
-VideoStream*	g_vsDepthStream;
-VideoStream*	g_vsColorStream;
+VideoStream		g_vsDepthStream;
+VideoStream		g_vsColorStream;
 
 // global object
 SimpleCamera	g_Camera;
@@ -34,8 +27,90 @@ unsigned int*	g_pIndex;
 unsigned int	g_uWidth, g_uHeight;
 
 // global flag
-bool	g_bUseCoordinateConverter = false;
 bool	g_bHaveColorSensor = true;
+
+#pragma endregion
+
+#pragma region used for Virtual Device
+// definition of customized property
+#define GET_VIRTUAL_STREAM_IMAGE	100000
+#define SET_VIRTUAL_STREAM_IMAGE	100001
+
+// The NewFrameListener to set the new frame of virtual device
+template<class _FUNC_>
+class CFrameModifer : public VideoStream::NewFrameListener
+{
+public:
+	CFrameModifer( VideoStream& rStream ) : m_rVStream( rStream )
+	{
+	}
+
+	void onNewFrame( openni::VideoStream& rStream )
+	{
+		openni::VideoFrameRef mFrame;
+		// read frame from real video stream
+		if( rStream.readFrame( &mFrame ) == openni::STATUS_OK )
+		{
+			// get a frame form virtual video stream
+			OniFrame* pFrame = NULL;
+			if( m_rVStream.invoke( GET_VIRTUAL_STREAM_IMAGE, pFrame ) == openni::STATUS_OK )
+			{
+				_FUNC_()( mFrame, *pFrame );
+
+				// write data to form virtual video stream
+				m_rVStream.invoke( SET_VIRTUAL_STREAM_IMAGE, pFrame );
+			}
+		}
+	}
+
+protected:
+	openni::VideoStream&	m_rVStream;
+};
+
+class FuncCopyDepth
+{
+public:
+	void operator()( const openni::VideoFrameRef& rSource, OniFrame& rTarget )
+	{
+		// type casting
+		const DepthPixel* pRealData = reinterpret_cast<const DepthPixel*>( rSource.getData() );
+		DepthPixel* pVirData = reinterpret_cast<DepthPixel*>( rTarget.data );
+
+		// read data from the frame of real sensor, and write to the frame of virtual sensor
+		for( int y = 0; y < rSource.getHeight(); ++ y )
+		{
+			for( int x = 0; x < rSource.getWidth(); ++ x )
+			{
+				int idx = x + y * rSource.getWidth();
+				pVirData[idx] = pRealData[idx];
+			}
+		}
+	}
+};
+
+class FuncCopyColor
+{
+public:
+	void operator()( const openni::VideoFrameRef& rSource, OniFrame& rTarget )
+	{
+		// type casting
+		const RGB888Pixel* pRealData = reinterpret_cast<const RGB888Pixel*>( rSource.getData() );
+		RGB888Pixel* pVirData = reinterpret_cast<RGB888Pixel*>( rTarget.data );
+
+		// read data from the frame of real sensor, and write to the frame of virtual sensor
+		for( int y = 0; y < rSource.getHeight(); ++ y )
+		{
+			for( int x = 0; x < rSource.getWidth(); ++ x )
+			{
+				int idx = x + y * rSource.getWidth();
+				pVirData[idx] = pRealData[idx];
+			}
+		}
+	}
+};
+
+
+#pragma endregion
 
 // function to build triangle
 inline bool BuildTriangle( unsigned int& iIdx, unsigned int v1, unsigned int v2, unsigned int v3, float th = 500.0f )
@@ -60,6 +135,7 @@ inline bool BuildTriangle( unsigned int& iIdx, unsigned int v1, unsigned int v2,
 	return false;
 }
 
+#pragma region GLUT callback functions
 // glut display function(draw)
 void display()
 {
@@ -68,7 +144,7 @@ void display()
 
 	// get depth frame
 	VideoFrameRef	vfDepthFrame;
-	if( g_vsDepthStream->readFrame( &vfDepthFrame ) == STATUS_OK )
+	if( g_vsDepthStream.readFrame( &vfDepthFrame ) == STATUS_OK )
 	{
 		const DepthPixel* pDepthArray = static_cast<const DepthPixel*>( vfDepthFrame.getData() );
 		int iW = vfDepthFrame.getWidth(),
@@ -86,7 +162,7 @@ void display()
 				if( rDepth > 0 )
 				{
 					int i = idx * 3;
-					CoordinateConverter::convertDepthToWorld( *g_vsDepthStream, x, y, rDepth, &(g_pPoints[i]), &(g_pPoints[i+1]), &(g_pPoints[i+2]) );
+					CoordinateConverter::convertDepthToWorld( g_vsDepthStream, x, y, rDepth, &(g_pPoints[i]), &(g_pPoints[i+1]), &(g_pPoints[i+2]) );
 				}
 			}
 		}
@@ -99,38 +175,9 @@ void display()
 		{
 			// get color frame
 			VideoFrameRef	vfColorFrame;
-			if( g_vsColorStream->readFrame( &vfColorFrame ) == STATUS_OK )
+			if( g_vsColorStream.readFrame( &vfColorFrame ) == STATUS_OK )
 			{
-				if( g_bUseCoordinateConverter )
-				{
-					const RGB888Pixel* pColorArray = static_cast<const RGB888Pixel*>( vfColorFrame.getData() );
-					for( int y = 0; y < iH; ++ y )
-					{
-						for( int x = 0; x < iW; ++ x )
-						{
-							// update points array
-							int idx = x + y * iW;
-							const DepthPixel& rDepth = pDepthArray[idx];
-							if( rDepth > 0 )
-							{
-								int cX, cY;
-								CoordinateConverter::convertDepthToColor( *g_vsDepthStream, *g_vsColorStream, x, y, rDepth, &cX, &cY );
-								if( cX >= 0 && cX < iW && cY >= 0 && cY < iH )
-								{
-									int idx2 = ( cX + cY * iW );
-									g_pColors[ 3 * idx     ] = pColorArray[idx2].r;
-									g_pColors[ 3 * idx + 1 ] = pColorArray[idx2].g;
-									g_pColors[ 3 * idx + 2 ] = pColorArray[idx2].b;
-								}
-							}
-						}
-					}
-					glColorPointer( 3, GL_UNSIGNED_BYTE, 0, g_pColors );
-				}
-				else
-				{
-					glColorPointer( 3, GL_UNSIGNED_BYTE, 0, vfColorFrame.getData() );
-				}
+				glColorPointer( 3, GL_UNSIGNED_BYTE, 0, vfColorFrame.getData() );
 			}
 		}
 		else
@@ -209,8 +256,8 @@ void keyboard( unsigned char key, int x, int y )
 		delete [] g_pIndex;
 
 		// stop OpenNI
-		g_vsDepthStream->destroy();
-		g_vsColorStream->destroy();
+		g_vsDepthStream.destroy();
+		g_vsColorStream.destroy();
 		g_devDevice.close();
 		OpenNI::shutdown();
 		exit( 0 );
@@ -281,9 +328,11 @@ void specialKey( int key, int x, int y )
 	}
 }
 
+#pragma endregion
+
 int main( int argc, char** argv )
 {
-#pragma region OpenNI initialize
+	#pragma region OpenNI initialize
 	// Initial OpenNI
 	if( OpenNI::initialize() != STATUS_OK )
 	{
@@ -302,21 +351,7 @@ int main( int argc, char** argv )
 	VideoStream vsDepth;
 	if( g_devDevice.hasSensor( SENSOR_DEPTH ) )
 	{
-		if( vsDepth.create( g_devDevice, SENSOR_DEPTH ) == STATUS_OK )
-		{
-			//vsDepth.setMirroringEnabled( false );
-			// set video mode
-			VideoMode mMode;
-			mMode.setResolution( 640, 480 );
-			mMode.setFps( 30 );
-			mMode.setPixelFormat( PIXEL_FORMAT_DEPTH_1_MM );
-
-			if( vsDepth.setVideoMode( mMode) != STATUS_OK )
-			{
-				cout << "Can't apply VideoMode: " << OpenNI::getExtendedError() << endl;
-			}
-		}
-		else
+		if( vsDepth.create( g_devDevice, SENSOR_DEPTH ) != STATUS_OK )
 		{
 			cerr << "Can't create depth stream on device: " << OpenNI::getExtendedError() << endl;
 			return -1;
@@ -334,18 +369,6 @@ int main( int argc, char** argv )
 	{
 		if( vsColor.create( g_devDevice, SENSOR_COLOR ) == STATUS_OK )
 		{
-			//vsColor.setMirroringEnabled( false );
-			// set video mode
-			VideoMode mMode;
-			mMode.setResolution( 640, 480 );
-			mMode.setFps( 30 );
-			mMode.setPixelFormat( PIXEL_FORMAT_RGB888 );
-
-			if( vsColor.setVideoMode( mMode) != STATUS_OK )
-			{
-				cout << "Can't apply VideoMode: " << OpenNI::getExtendedError() << endl;
-			}
-
 			// image registration
 			if( g_devDevice.isImageRegistrationModeSupported( IMAGE_REGISTRATION_DEPTH_TO_COLOR ) )
 			{
@@ -354,7 +377,6 @@ int main( int argc, char** argv )
 			else
 			{
 				cout << "This device doesn't support IMAGE_REGISTRATION_DEPTH_TO_COLOR, will use CoordinateConverter." << endl;
-				g_bUseCoordinateConverter = true;
 			}
 		}
 		else
@@ -368,43 +390,46 @@ int main( int argc, char** argv )
 		cerr << "This device does not have depth sensor" << endl;
 		g_bHaveColorSensor = false;
 	}
-#pragma endregion
+	#pragma endregion
 
-#pragma region Virtual Device
+	#pragma region Virtual Device
 	// Open Virtual Device
 	Device	virDevice;
 	if( virDevice.open( "\\OpenNI2\\VirtualDevice\\TEST" ) != STATUS_OK )
 	{
-		cerr << "Can't Open Device: " << OpenNI::getExtendedError() << endl;
+		cerr << "Can't create virtual device: " << OpenNI::getExtendedError() << endl;
 		return -1;
 	}
 
-	g_vsColorStream = CreateVirtualStream( virDevice, vsColor, []( const OniFrame& rF1,OniFrame& rF2 ){
-		RGB888Pixel* pImg1 = (RGB888Pixel*)rF1.data;
-		RGB888Pixel* pImg2 = (RGB888Pixel*)rF2.data;
-		for( int y = 0; y < rF2.height; ++ y )
-		{
-			for( int x = 0; x < rF2.width; ++ x )
-			{
-				pImg2[ x + y * rF2.width ] = pImg1[ x + y * rF2.width ];
-			}
-		}
-	} );
+	// create virtual depth video stream
+	if( g_vsDepthStream.create( virDevice, SENSOR_DEPTH ) == STATUS_OK )
+	{
+		// set the FOV for depth, which is required for
+		g_vsDepthStream.setProperty( ONI_STREAM_PROPERTY_VERTICAL_FOV,		vsDepth.getVerticalFieldOfView() );
+		g_vsDepthStream.setProperty( ONI_STREAM_PROPERTY_HORIZONTAL_FOV,	vsDepth.getHorizontalFieldOfView() );
 
-	g_vsDepthStream = CreateVirtualStream( virDevice, vsDepth, []( const OniFrame& rF1,OniFrame& rF2 ){
-		DepthPixel* pImg1 = (DepthPixel*)rF1.data;
-		DepthPixel* pImg2 = (DepthPixel*)rF2.data;
-		for( int y = 0; y < rF2.height; ++ y )
-		{
-			for( int x = 0; x < rF2.width; ++ x )
-			{
-				pImg2[ x + y * rF2.width ] = pImg1[ x + y * rF2.width ];
-			}
-		}
-	} );
-#pragma endregion
+		g_vsDepthStream.setVideoMode( vsDepth.getVideoMode() );
 
-#pragma region OpenGL Initialize
+		vsDepth.addNewFrameListener( new CFrameModifer<FuncCopyDepth>( g_vsDepthStream ) );
+	}
+	else
+	{
+		cerr << "Virtual Depth Stream Create error: " << OpenNI::getExtendedError() << endl;
+		return -1;
+	}
+
+	// create virtual color video stream
+	if( g_bHaveColorSensor )
+	{
+		if( g_vsColorStream.create( virDevice, SENSOR_COLOR ) == STATUS_OK )
+		{
+			g_vsColorStream.setVideoMode( vsColor.getVideoMode() );
+			vsColor.addNewFrameListener( new CFrameModifer<FuncCopyColor>( g_vsColorStream ) );
+		}
+	}
+	#pragma endregion
+
+	#pragma region OpenGL Initialize
 	// initial glut
 	glutInit(&argc, argv);
 	glutInitDisplayMode( GLUT_DOUBLE | GLUT_DEPTH | GLUT_RGB );
@@ -430,9 +455,9 @@ int main( int argc, char** argv )
 	glutIdleFunc( idle );
 	glutKeyboardFunc( keyboard );
 	glutSpecialFunc( specialKey );
-#pragma endregion
+	#pragma endregion
 
-#pragma region allocation memory
+	#pragma region allocation memory
 	// allocate memory
 	VideoMode mMode = vsDepth.getVideoMode();
 	int g_uWidth = mMode.getResolutionX(),
@@ -440,14 +465,14 @@ int main( int argc, char** argv )
 	g_pPoints	= new float[ g_uWidth * g_uHeight * 3 ];
 	g_pColors	= new unsigned char[ g_uWidth * g_uHeight * 3 ];
 	g_pIndex	= new unsigned int[ g_uWidth * g_uHeight * 6 ];
-#pragma endregion
+	#pragma endregion
 
 	// start
 	if( vsDepth.start() == STATUS_OK )
 	{
 		vsColor.start();
-		g_vsDepthStream->start();
-		g_vsColorStream->start();
+		g_vsDepthStream.start();
+		g_vsColorStream.start();
 		glutMainLoop();
 	}
 	else
