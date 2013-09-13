@@ -108,6 +108,8 @@ int main( int, char** )
 	VideoStream vsVirDepth;
 	if( vsVirDepth.create( devVirDevice, SENSOR_DEPTH ) == STATUS_OK )
 	{
+		vsVirDepth.setVideoMode( vsRealDepth.getVideoMode() );
+
 		// add new frame listener to real video stream
 		vsRealDepth.addNewFrameListener( new CFrameModifer(vsVirDepth) );
 	}
