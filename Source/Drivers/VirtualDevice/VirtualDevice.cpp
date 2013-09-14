@@ -1,3 +1,17 @@
+/**
+ * This is a virtual device driver module for OpenNI 2.2+
+ *
+ * It doesn't map to any physical device, but a dummy device.
+ * You can send the map you want to it, and it will let OpenNI to use it.
+ *
+ * It also provide a property pool to accept any property.
+ *
+ * 		by Heresy
+ * 		http://kheresy.wordpress.com
+ *
+ * version 0.2 @2013/09/14
+ */
+
 // C Header
 #include <string.h>
 
@@ -68,6 +82,9 @@ bool SetProperty( oni::driver::DriverServices& rService, size_t uSize, const voi
 
 #pragma endregion
 
+/**
+ * This is a property pool to store any type of property
+ */
 class PropertyPool
 {
 public:
@@ -205,7 +222,7 @@ public:
 			if( m_Properties.GetProperty( propertyId, data, pDataSize ) )
 				return ONI_STATUS_OK;
 		}
-		std::cerr << " >>> Request Stream Property: " << propertyId << std::endl;
+		//std::cerr << " >>> Request Stream Property: " << propertyId << std::endl;
 		return ONI_STATUS_ERROR;
 	}
 
@@ -264,6 +281,10 @@ public:
 						return ONI_STATUS_OK;
 				}
 			}
+			else
+			{
+				return ONI_STATUS_ERROR;
+			}
 			break;
 
 		case SET_VIRTUAL_STREAM_IMAGE:
@@ -275,6 +296,10 @@ public:
 					if( SendNewFrame( *pFrame ) )
 						return ONI_STATUS_OK;
 				}
+			}
+			else
+			{
+				return ONI_STATUS_ERROR;
 			}
 			break;
 		}
