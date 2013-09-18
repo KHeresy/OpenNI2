@@ -193,7 +193,7 @@ public:
 	/**
 	 * Check if the property is supported
 	 */
-	OniBool isPropertySupported( int propertyId )
+	OniBool isPropertySupported( int )
 	{
 		return true;
 	}
@@ -290,7 +290,7 @@ public:
 		case SET_VIRTUAL_STREAM_IMAGE:
 			if( m_bStarted )
 			{
-				OniFrame** pFrame = PropertyConvert<OniFrame*>( m_rDriverServices, dataSize, (void*)data );
+				OniFrame** pFrame = PropertyConvert<OniFrame*>( m_rDriverServices, dataSize, data );
 				if( pFrame != NULL )
 				{
 					if( SendNewFrame( *pFrame ) )
@@ -325,9 +325,6 @@ protected:
 		OniFrame* pFrame = getServices().acquireFrame();
 		if( pFrame != NULL )
 		{
-			// copy data from cv::Mat to OniDriverFrame
-			pFrame->dataSize = int(m_uDataSize);
-
 			// update metadata
 			pFrame->frameIndex		= ++m_iFrameId;
 			pFrame->videoMode		= m_mVideoMode;
