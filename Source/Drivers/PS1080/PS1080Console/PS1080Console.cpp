@@ -219,6 +219,14 @@ bool Version(openni::Device& Device, vector<string>& /*Command*/)
 	{
 		printf ("V5.7");
 	}
+	else if (g_DeviceVersion.FWVer == XN_SENSOR_FW_VER_5_8)
+	{
+		printf ("V5.8");
+	}
+	else if (g_DeviceVersion.FWVer == XN_SENSOR_FW_VER_5_9)
+	{
+		printf ("V5.9");
+	}
 	else if (g_DeviceVersion.FWVer == XN_SENSOR_FW_VER_UNKNOWN)
 	{
 		printf ("Unknown");
@@ -1616,7 +1624,7 @@ bool StartReadData(openni::Device& Device, vector<string>& Command)
 
 	if (!g_colorStream.isValid())
 	{
-		rc = g_depthStream.create(Device, openni::SENSOR_COLOR);
+		rc = g_colorStream.create(Device, openni::SENSOR_COLOR);
 		if (rc != openni::STATUS_OK)
 		{
 			printf("Can't create image stream: %s\n", openni::OpenNI::getExtendedError());

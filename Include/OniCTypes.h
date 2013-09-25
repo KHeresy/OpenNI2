@@ -141,6 +141,7 @@ typedef struct
 Pixel type used to store depth images.
 */
 typedef uint16_t OniDepthPixel;
+typedef uint16_t OniIRPixel;
 
 /**
 Pixel type used to store 16-bit grayscale images
@@ -181,6 +182,23 @@ typedef struct
 	/** Overall luminance value of second pixel. */
 	uint8_t y2;
 } OniYUV422DoublePixel;
+
+/**
+ Holds the value of two pixels in YUV422 format (Luminance/Chrominance,16-bits/pixel).
+ The first pixel has the values y1, u, v.
+ The second pixel has the values y2, u, v.
+*/
+typedef struct
+{
+	/** Overall luminance value of first pixel. */
+	uint8_t y1;
+	/** First chrominance value for two pixels, stored as blue luminance difference signal. */
+	uint8_t u;
+	/** Overall luminance value of second pixel. */
+	uint8_t y2;
+	/** Second chrominance value for two pixels, stored as red luminance difference signal. */
+	uint8_t v;
+} OniYUYVDoublePixel;
 
 #pragma pack (pop)
 
