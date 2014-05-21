@@ -81,7 +81,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>$(NITE2_INCLUDE);D:\Heresy\Engine3\external\package\OpenCV-2.4.5\opencv\build\include;..\..\Include;..\..\ThirdParty\GL;..\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Include;..\..\ThirdParty\GL;..\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_WINDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level4</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -91,8 +91,8 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;opencv_core245d.lib;opencv_highgui245d.lib;opencv_imgproc245d.lib</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir);..\..\ThirdParty\GL;D:\Heresy\Engine3\external\package\OpenCV-2.4.5\opencv\build\x86\vc11\lib;$(NITE2_LIB)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);..\..\ThirdParty\GL;</AdditionalLibraryDirectories>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
   </ItemDefinitionGroup>
@@ -119,7 +119,7 @@
       <WarningLevel>Level4</WarningLevel>
       <Optimization>MaxSpeed</Optimization>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>$(NITE2_INCLUDE);D:\Heresy\Engine3\external\package\OpenCV-2.4.5\opencv\build\include;..\..\Include;..\..\ThirdParty\GL;..\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\Include;..\..\ThirdParty\GL;..\Common;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
@@ -134,8 +134,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>OpenNI2.lib;NiTE2.lib;</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(OutDir);..\..\ThirdParty\GL;D:\Heresy\Engine3\external\package\OpenCV-2.4.5\opencv\build\x86\vc11\lib;$(NITE2_LIB)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>OpenNI2.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(OutDir);..\..\ThirdParty\GL;</AdditionalLibraryDirectories>
       <TreatLinkerWarningAsErrors>true</TreatLinkerWarningAsErrors>
     </Link>
   </ItemDefinitionGroup>
@@ -176,7 +176,6 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\vDeviceNiTE1\VirtualDevice.h" />
     <ClInclude Include="OpenGLCamera.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

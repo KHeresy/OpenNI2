@@ -1,3 +1,17 @@
+/**
+ * This is a virtual device driver module for OpenNI 2.2+
+ *
+ * It doesn't map to any physical device, but a dummy device.
+ * You can send the map you want to it, and it will let OpenNI to use it.
+ *
+ * It also provide a property pool to accept any property.
+ *
+ * 		by Heresy
+ * 		http://kheresy.wordpress.com
+ *
+ * version 0.2 @2013/09/14
+ */
+
 // C Header
 #include <string.h>
 
@@ -68,8 +82,14 @@ bool SetProperty( oni::driver::DriverServices& rService, size_t uSize, const voi
 
 #pragma endregion
 
+/**
+ * This is a property pool to store any type of property
+ */
 class PropertyPool
 {
+public:
+	std::map< int,std::vector<unsigned char> >	m_Data;
+
 public:
 	PropertyPool( oni::driver::DriverServices& rService ) : m_Service( rService )
 	{
@@ -121,7 +141,6 @@ public:
 	}
 
 protected:
-	std::map< int,std::vector<unsigned char> >	m_Data;
 	oni::driver::DriverServices&				m_Service;
 
 private:
@@ -176,7 +195,7 @@ public:
 	/**
 	 * Check if the property is supported
 	 */
-	OniBool isPropertySupported( int propertyId )
+	OniBool isPropertySupported( int )
 	{
 		return true;
 	}
@@ -205,7 +224,7 @@ public:
 			if( m_Properties.GetProperty( propertyId, data, pDataSize ) )
 				return ONI_STATUS_OK;
 		}
-		std::cerr << " >>> Request Stream Property: " << propertyId << std::endl;
+		//std::cerr << " >>> Request Stream Property: " << propertyId << std::endl;
 		return ONI_STATUS_ERROR;
 	}
 
@@ -264,17 +283,25 @@ public:
 						return ONI_STATUS_OK;
 				}
 			}
+			else
+			{
+				return ONI_STATUS_ERROR;
+			}
 			break;
 
 		case SET_VIRTUAL_STREAM_IMAGE:
 			if( m_bStarted )
 			{
-				OniFrame** pFrame = PropertyConvert<OniFrame*>( m_rDriverServices, dataSize, (void*)data );
+				OniFrame** pFrame = PropertyConvert<OniFrame*>( m_rDriverServices, dataSize, data );
 				if( pFrame != NULL )
 				{
 					if( SendNewFrame( *pFrame ) )
 						return ONI_STATUS_OK;
 				}
+			}
+			else
+			{
+				return ONI_STATUS_ERROR;
 			}
 			break;
 		}
@@ -294,15 +321,20 @@ public:
 		return FALSE;
 	}
 
+	void notifyAllProperties()
+	{
+		for( std::map< int,std::vector<unsigned char> >::iterator itProp = m_Properties.m_Data.begin(); itProp != m_Properties.m_Data.end(); ++ itProp )
+		{
+			raisePropertyChanged( itProp->first, itProp->second.data(), itProp->second.size() );
+		}
+	}
+
 protected:
 	OniFrame* CreateeNewFrame()
 	{
 		OniFrame* pFrame = getServices().acquireFrame();
 		if( pFrame != NULL )
 		{
-			// copy data from cv::Mat to OniDriverFrame
-			pFrame->dataSize = int(m_uDataSize);
-
 			// update metadata
 			pFrame->frameIndex		= ++m_iFrameId;
 			pFrame->videoMode		= m_mVideoMode;
