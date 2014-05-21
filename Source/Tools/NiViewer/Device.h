@@ -18,8 +18,8 @@
 *  limitations under the License.                                            *
 *                                                                            *
 *****************************************************************************/
-#ifndef __DEVICE_H__
-#define __DEVICE_H__
+#ifndef DEVICE_H
+#define DEVICE_H
 
 // --------------------------------
 // Includes
@@ -136,6 +136,8 @@ openni::VideoFrameRef& getIRFrame();
 
 void toggleFrameSync(int);
 
+void toggleZoomCrop(int);
+
 void togglePlaybackRepeat(int /*ignored*/);
 openni::Status setPlaybackSpeed(float speed);
 float getPlaybackSpeed();
@@ -143,4 +145,4 @@ void changePlaybackSpeed(int ratioDiff);
 
 bool convertDepthPointToColor(int depthX, int depthY, openni::DepthPixel DepthZ, int* pColorX, int* pColorY);
 
-#endif //__DEVICE_H__
+#endif // DEVICE_H

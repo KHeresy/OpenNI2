@@ -22,8 +22,8 @@
 /// Contains the declaration of Device class that implements a virtual OpenNI
 /// device, capable of reading data from a *.ONI file.
 
-#ifndef __PLAYER_DEVICE_H__
-#define __PLAYER_DEVICE_H__
+#ifndef PLAYERDEVICE_H
+#define PLAYERDEVICE_H
 
 #include "Driver/OniDriverAPI.h"
 #include "XnString.h"
@@ -84,14 +84,12 @@ public:
 
 	const char* getOriginalDevice() {return m_originalDevice;}
 protected:
-
-	void Lock() { m_cs.Lock(); }
-	void Unlock() { m_cs.Unlock(); }
-
 	PlayerSource* FindSource(const XnChar* strNodeName);
 
 	// Wake up when timestamp is valid.
 	void SleepToTimestamp(XnUInt64 nTimeStamp);
+
+	void LoadConfigurationFromIniFile();
 
 private:
 	void close();
@@ -103,7 +101,6 @@ private:
 	} Seek;
 
 	void MainLoop();
-	void LockStreams(bool toLock);
 
 	static XN_THREAD_PROC ThreadProc(XN_THREAD_PARAM pThreadParam);
 
@@ -133,6 +130,8 @@ private:
 
 	static XnStatus XN_CALLBACK_TYPE CodecCreate(void* pCookie, const char* strNodeName, XnCodecID nCodecId, XnCodec** ppCodec);
 	static void     XN_CALLBACK_TYPE CodecDestroy(void* pCookie, XnCodec* pCodec);
+	
+	static XnStatus ResolveGlobalConfigFileName(XnChar* strConfigFile, XnUInt32 nBufSize, const XnChar* strConfigDir);
 
 	// Name of the node (used for identifying the device in the callbacks).
 	xnl::String m_nodeName;
@@ -181,7 +180,6 @@ private:
 	// List of streams.
 	typedef xnl::List<PlayerStream*> StreamList;
 	StreamList m_streams;
-	bool m_bStreamsLocked;
 
 	// Internal event for stream ready for data.
 	xnl::OSEvent m_readyForDataInternalEvent;
@@ -196,8 +194,11 @@ private:
 	xnl::CriticalSection m_cs;
 
 	char m_originalDevice[ONI_MAX_STR];
+
+	char m_iniFilePath[XN_FILE_MAX_PATH];
+
 };
 
 } // namespace oni_files_player
 
-#endif //__PLAYER_DEVICE_H__
+#endif // PLAYERDEVICE_H

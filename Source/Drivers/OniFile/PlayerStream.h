@@ -22,8 +22,8 @@
 /// Contains the declaration of Stream class that implements a stream from 
 /// a virtual OpenNI device.
 
-#ifndef __PLAYER_STREAM_H__
-#define __PLAYER_STREAM_H__
+#ifndef PLAYERSTREAM_H
+#define PLAYERSTREAM_H
 
 #include "Driver/OniDriverAPI.h"
 #include "PlayerProperties.h"
@@ -100,10 +100,6 @@ public:
 	// Unregister from 'destroy' event.
 	void UnregisterDestroyEvent(OniCallbackHandle handle);
 
-	//Used to prevent any access to the stream while it is being modified externally (by a device, for example)
-	void Lock();
-	void Unlock();
-
 	void notifyAllProperties();
 private:
 	void destroy();
@@ -145,4 +141,4 @@ private:
 
 } // namespace oni_files_player
 
-#endif //__PLAYER_STREAM_H__
+#endif // PLAYERSTREAM_H

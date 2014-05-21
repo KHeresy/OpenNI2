@@ -77,19 +77,17 @@ void PlayerStream::destroy()
 
 OniStatus PlayerStream::start()
 {
-	m_cs.Lock();
+	xnl::AutoCSLocker lock(m_cs);
 	m_isStarted = true;
 	m_requiredFrameSize = getRequiredFrameSize();
-	m_cs.Unlock();
 
 	return ONI_STATUS_OK;
 }
 
 void PlayerStream::stop()
 {
-	m_cs.Lock();
+	xnl::AutoCSLocker lock(m_cs);
 	m_isStarted = false;
-	m_cs.Unlock();
 }
 
 PlayerSource* PlayerStream::GetSource()
@@ -100,20 +98,48 @@ PlayerSource* PlayerStream::GetSource()
 OniStatus PlayerStream::getProperty(int propertyId, void* pData, int* pDataSize)
 {
 	// Check if the property exists.
-	m_cs.Lock();
+	xnl::AutoCSLocker lock(m_cs);
 	OniStatus rc = m_properties.GetProperty(propertyId, pData, pDataSize);
 	if (rc != ONI_STATUS_OK)
 	{
 		rc = m_pSource->GetProperty(propertyId, pData, pDataSize);
 	}
-	m_cs.Unlock();
 
 	return rc;
 }
 
-OniStatus PlayerStream::setProperty(int /*propertyId*/, const void* /*pData*/, int /*dataSize*/)
+OniStatus PlayerStream::setProperty(int propertyId, const void* pData, int dataSize)
 {
-	return ONI_STATUS_ERROR;
+	OniStatus nRetVal = ONI_STATUS_OK;
+
+	if (propertyId == ONI_STREAM_PROPERTY_VIDEO_MODE)
+	{
+		if (dataSize != sizeof(OniVideoMode))
+		{
+			return ONI_STATUS_BAD_PARAMETER;
+		}
+
+		OniVideoMode currMode;
+		int size = sizeof(currMode);
+		nRetVal = getProperty(ONI_STREAM_PROPERTY_VIDEO_MODE, &currMode, &size);
+		XN_ASSERT(nRetVal == ONI_STATUS_OK);
+		XN_REFERENCE_VARIABLE(nRetVal);
+
+		OniVideoMode* pRequestedMode = (OniVideoMode*)pData;
+		if (pRequestedMode->resolutionX == currMode.resolutionX &&
+			pRequestedMode->resolutionY == currMode.resolutionY &&
+			pRequestedMode->fps == currMode.fps &&
+			pRequestedMode->pixelFormat == currMode.pixelFormat)
+		{
+			return ONI_STATUS_OK;
+		}
+
+		return ONI_STATUS_BAD_PARAMETER;
+	}
+	else
+	{
+		return ONI_STATUS_ERROR;
+	}
 }
 
 OniStatus PlayerStream::RegisterReadyForDataEvent(ReadyForDataCallback callback, void* pCookie, OniCallbackHandle& handle)
@@ -179,13 +205,11 @@ void ONI_CALLBACK_TYPE PlayerStream::OnNewDataCallback(const PlayerSource::NewDa
 
 	// Set the cropping property.
 	OniCropping cropping;
-	cropping.enabled = FALSE;
 	int dataSize = sizeof(cropping);
 	rc = pStream->m_pSource->GetProperty(ONI_STREAM_PROPERTY_CROPPING, &cropping, &dataSize);
 	if (rc != ONI_STATUS_OK)
 	{
-		XN_ASSERT(FALSE);
-		return;
+		cropping.enabled = FALSE;
 	}
 
 	// Allocate new frame and fill it.
@@ -240,6 +264,7 @@ void ONI_CALLBACK_TYPE PlayerStream::OnNewDataCallback(const PlayerSource::NewDa
 
 int PlayerStream::getRequiredFrameSize()
 {
+	xnl::AutoCSLocker lock(m_cs);
 	int requiredFrameSize = m_pSource->GetRequiredFrameSize();
 	if (requiredFrameSize == 0)
 	{
@@ -250,18 +275,9 @@ int PlayerStream::getRequiredFrameSize()
 	return requiredFrameSize;
 }
 
-void PlayerStream::Lock()
-{
-	m_cs.Lock();
-}
-
-void PlayerStream::Unlock()
-{
-	m_cs.Unlock();
-}
-
 void PlayerStream::notifyAllProperties()
 {
+	xnl::AutoCSLocker lock(m_cs);
 	raisePropertyChanged(ONI_FILE_PROPERTY_ORIGINAL_DEVICE, m_pDevice->getOriginalDevice(), ONI_MAX_STR);
 
 	for (PlayerProperties::PropertiesHash::ConstIterator property = m_properties.Begin();

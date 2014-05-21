@@ -6,14 +6,12 @@ INC_DIRS = \
 	. \
 	../../../Include \
 	../../../ThirdParty/PSCommon/XnLib/Include \
-	../../../ThirdParty/LibJPEG \
 	Formats
 
 SRC_FILES = \
 	*.cpp \
 	Formats/*.cpp \
 	XnLibExtensions/*.cpp \
-	../../../ThirdParty/LibJPEG/*.c
 
 
 ifeq ("$(OSTYPE)","Darwin")
@@ -25,7 +23,7 @@ endif
 LIB_NAME = OniFile
 
 LIB_DIRS = ../../../ThirdParty/PSCommon/XnLib/Bin/$(PLATFORM)-$(CFG)
-USED_LIBS = XnLib pthread 
+USED_LIBS = XnLib pthread dl
 ifneq ("$(OSTYPE)","Darwin")
         USED_LIBS += rt  
 endif
