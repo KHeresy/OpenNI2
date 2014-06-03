@@ -36,12 +36,17 @@ class XnJpegCodec : public XnCodecBase
 public:
 	XnJpegCodec(XnBool bRGB, XnUInt32 nXRes, XnUInt32 nYRes, XnUInt32 nQuality = XN_STREAM_COMPRESSION_JPEG_DEFAULT_QUALITY) :
 		m_bRGB(bRGB), m_nXRes(nXRes), m_nYRes(nYRes), m_nQuality(nQuality), mp_CompJPEGContext(NULL), mp_UncompJPEGContext(NULL)
-	{}
+	{
+		XnStreamCreateCompressImageJ(&mp_CompJPEGContext);
+		XnStreamCreateUncompressImageJ(&mp_UncompJPEGContext);
+	}
 
 	~XnJpegCodec()
 	{
 		XnStreamFreeCompressImageJ(mp_CompJPEGContext);
+		XnStreamReleaseCompressImageJ(&mp_CompJPEGContext);
 		XnStreamFreeUncompressImageJ(mp_UncompJPEGContext);
+		XnStreamReleaseUncompressImageJ(&mp_UncompJPEGContext);
 	}
 
 	virtual XnCodecID GetCodecID() const { return XN_CODEC_JPEG; }
@@ -50,10 +55,10 @@ public:
 	{
 		XnStatus nRetVal = XN_STATUS_OK;
 
-		nRetVal = XnStreamInitCompressImageJ(&mp_CompJPEGContext);
+		nRetVal = XnStreamInitCompressImageJ(mp_CompJPEGContext);
 		XN_IS_STATUS_OK(nRetVal);
 
-		nRetVal = XnStreamInitUncompressImageJ(&mp_UncompJPEGContext);
+		nRetVal = XnStreamInitUncompressImageJ(mp_UncompJPEGContext);
 		if (nRetVal != XN_STATUS_OK)
 		{
 			XnStreamFreeCompressImageJ(mp_CompJPEGContext);

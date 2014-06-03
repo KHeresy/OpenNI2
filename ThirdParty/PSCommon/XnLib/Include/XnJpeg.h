@@ -48,13 +48,17 @@ typedef XnStreamUncompJPEGContext XnStreamUncompJPEGContext;
 //---------------------------------------------------------------------------
 // Functions Declaration
 //---------------------------------------------------------------------------
-XnStatus XnStreamInitCompressImageJ(XnStreamCompJPEGContext** ppStreamCompJPEGContext);
+XnStatus XnStreamCreateCompressImageJ(XnStreamCompJPEGContext** ppStreamCompJPEGContext);	// (*ppStreamCompJPEGContext) should be NULL
+XnStatus XnStreamInitCompressImageJ(XnStreamCompJPEGContext* pStreamCompJPEGContext);
 XnStatus XnStreamCompressImage8J(XnStreamCompJPEGContext* pStreamCompJPEGContext, const XnUInt8* pInput, XnUInt8* pOutput, XnUInt32* pnOutputSize, const XnUInt32 nXRes, const XnUInt32 nYRes, const XnUInt32 nQuality);
 XnStatus XnStreamCompressImage24J(XnStreamCompJPEGContext* pStreamCompJPEGContext, const XnUInt8* pInput, XnUInt8* pOutput, XnUInt32* pnOutputSize, const XnUInt32 nXRes, const XnUInt32 nYRes, const XnUInt32 nQuality);
 XnStatus XnStreamFreeCompressImageJ(XnStreamCompJPEGContext* pStreamCompJPEGContext);
+XnStatus XnStreamReleaseCompressImageJ(XnStreamCompJPEGContext** ppStreamCompJPEGContext);
 
-XnStatus XnStreamInitUncompressImageJ(XnStreamUncompJPEGContext** ppStreamUncompJPEGContext);
+XnStatus XnStreamCreateUncompressImageJ(XnStreamUncompJPEGContext** ppStreamUncompJPEGContext);	// (*ppStreamUncompJPEGContext) should be NULL
+XnStatus XnStreamInitUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGContext);
 XnStatus XnStreamUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGContext, const XnUInt8* pInput, const XnUInt32 nInputSize, XnUInt8* pOutput, XnUInt32* pnOutputSize);
 XnStatus XnStreamFreeUncompressImageJ(XnStreamUncompJPEGContext* pStreamUncompJPEGContext);
+XnStatus XnStreamReleaseUncompressImageJ(XnStreamUncompJPEGContext** ppStreamUncompJPEGContext);
 
 #endif // _XN_JPEG_H_

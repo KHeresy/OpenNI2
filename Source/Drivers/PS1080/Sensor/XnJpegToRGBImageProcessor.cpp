@@ -32,11 +32,13 @@ XnJpegToRGBImageProcessor::XnJpegToRGBImageProcessor(XnSensorImageStream* pStrea
 	XnImageProcessor(pStream, pHelper, pBufferManager)
 {
 	SetAllowDoubleSOFPackets(TRUE);
+	XnStreamCreateUncompressImageJ(&mp_JPEGContext);
 }
 
 XnJpegToRGBImageProcessor::~XnJpegToRGBImageProcessor()
 {
 	XnStreamFreeUncompressImageJ(mp_JPEGContext);
+	XnStreamReleaseUncompressImageJ(&mp_JPEGContext);
 }
 
 XnStatus XnJpegToRGBImageProcessor::Init()
@@ -48,7 +50,7 @@ XnStatus XnJpegToRGBImageProcessor::Init()
 
 	XN_VALIDATE_BUFFER_ALLOCATE(m_RawData, GetExpectedOutputSize());
 
-	nRetVal = XnStreamInitUncompressImageJ(&mp_JPEGContext);
+	nRetVal = XnStreamInitUncompressImageJ(mp_JPEGContext);
 	XN_IS_STATUS_OK(nRetVal);
 
 	return (XN_STATUS_OK);
